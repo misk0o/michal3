@@ -1,0 +1,45 @@
+{
+  "name": "michal2",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": " prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "clean": "rmdir /s /q .next && rmdir /s /q node_modules && npm install",
+    "tree": "tree -a -L 10 | Select-String -Pattern '^(?!.*(node_modules|.git|.next)).*$' | Out-String"
+  },
+  "dependencies": {
+    "@auth/prisma-adapter": "^2.7.4",
+    "@emotion/react": "^11.13.5",
+    "@emotion/styled": "^11.13.5",
+    "@fontsource/roboto": "^5.0.15",
+    "@mui/icons-material": "^6.1.8",
+    "@mui/material": "^6.1.8",
+    "@prisma/client": "^6.3.0",
+    "lodash": "^4.17.21",
+    "lodash.debounce": "^4.0.8",
+    "next": "^14.2.18",
+    "next-auth": "^4.24.7",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "tree": "^0.1.3"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.195",
+    "@types/lodash.debounce": "^4.0.9",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "eslint": "^8.0.0",
+    "eslint-config-next": "14.2.8",
+    "prisma": "^6.3.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": "18.x",
+    "npm": "8.x"
+  }
+}

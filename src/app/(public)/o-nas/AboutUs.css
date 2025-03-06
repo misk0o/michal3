@@ -1,0 +1,39 @@
+.about-container {
+    padding: 3rem;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+  }
+  
+  .title {
+    font-weight: bold;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: #2c3e50;
+  }
+  
+  .intro-text {
+    font-size: 1.2rem;
+    color: #34495e;
+    line-height: 1.6;
+  }
+  
+  .link-text {
+    font-size: 1rem;
+    color: #34495e;
+    margin-top: 1.5rem;
+  }
+  
+  .link-container {
+    margin-top: 0.5rem;
+  }
+  
+  .link {
+    font-size: 1.1rem;
+    color: #2980b9;
+    text-decoration: none;
+  }
+  
+  .link:hover {
+    text-decoration: underline;
+  }
+  
