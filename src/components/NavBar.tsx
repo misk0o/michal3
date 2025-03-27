@@ -21,6 +21,7 @@ import {
   Gavel as GavelIcon,
   Brightness7 as Brightness7Icon,
   Brightness4 as Brightness4Icon,
+  Bookmark as BookmarkIcon,
 } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -36,7 +37,8 @@ export default function Navbar() {
   const privatePaths = [
     { label: "Domov", value: "/", icon: <HomeIcon /> },
     { label: "Hľadať", value: "/hladanie", icon: <SearchIcon /> },
-    { label: "Pridať", value: "/prispevok", icon: <AddCircleIcon /> },
+    { label: "Pridať", value: "/pridat", icon: <AddCircleIcon /> },
+    { label: "Záložky", value: "/zalozky", icon: <BookmarkIcon /> },
     {
       label: "Profil",
       value: "/profil",
@@ -76,8 +78,10 @@ export default function Navbar() {
         showLabels
         value={value}
         onChange={(event, newValue) => {
-          setValue(newValue);
-          router.push(newValue);
+          if (typeof newValue === 'string') {
+            setValue(newValue);
+            router.push(newValue);
+          }
         }}
         sx={{
           backgroundColor: isDarkMode ? "#121212" : "#ffffff",

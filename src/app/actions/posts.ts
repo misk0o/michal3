@@ -9,7 +9,24 @@ export const fetchPosts = async (): Promise<(Post & { user: User })[]> => { // A
   try {
     const posts = await prisma.post.findMany({
       orderBy: { createdAt: "desc" },
-      include: { user: true }, // Include the associated user for each post
+      include: {
+        user: true,
+        comments: {
+          include: {
+            user: true
+          }
+        },
+        likes: {
+          include: {
+            user: true
+          }
+        },
+        bookmarks: {
+          include: {
+            user: true
+          }
+        }
+      },
     });
 
     return posts;
@@ -25,7 +42,24 @@ export const fetchPostsByUserId = async (userId: string): Promise<(Post & { user
     const posts = await prisma.post.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
-      include: { user: true }, // Include the user who created the post
+      include: {
+        user: true,
+        comments: {
+          include: {
+            user: true
+          }
+        },
+        likes: {
+          include: {
+            user: true
+          }
+        },
+        bookmarks: {
+          include: {
+            user: true
+          }
+        }
+      },
     });
 
     return posts;
