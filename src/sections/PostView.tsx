@@ -35,9 +35,27 @@ import { useSession } from "next-auth/react";
 
 interface ExtendedPost extends Post {
   user: User;
-  comments: any[];
-  likes: any[];
-  bookmarks: any[];
+  images: {
+    id: string;
+    imageUrl: string;
+    order: number;
+  }[];
+  comments: {
+    id: string;
+    content: string;
+    userId: string;
+    user: User;
+  }[];
+  likes: {
+    id: string;
+    userId: string;
+    user: User;
+  }[];
+  bookmarks: {
+    id: string;
+    userId: string;
+    user: User;
+  }[];
 }
 
 interface PostViewProps {
@@ -69,6 +87,7 @@ const PostView = ({ posts: propPosts }: PostViewProps) => {
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
   const [animatingLike, setAnimatingLike] = useState<string | null>(null);
   const [animatingBookmark, setAnimatingBookmark] = useState<string | null>(null);
+  const [showAllComments, setShowAllComments] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!propPosts) {
@@ -144,8 +163,8 @@ const PostView = ({ posts: propPosts }: PostViewProps) => {
     }}>
       {posts.map((post) => {
         const userEmail = session?.user?.email;
-        const isLiked = post.likes.some(like => like.userId === userEmail);
-        const isBookmarked = post.bookmarks.some(bookmark => bookmark.userId === userEmail);
+        const isLiked = post.likes.some(like => like.user.email === userEmail);
+        const isBookmarked = post.bookmarks.some(bookmark => bookmark.user.email === userEmail);
 
         return (
           <Card key={post.id} sx={{ 
@@ -173,7 +192,7 @@ const PostView = ({ posts: propPosts }: PostViewProps) => {
 
             <CardMedia
               component="img"
-              image={post.imageUrl}
+              image={post.images[0]?.imageUrl || ''}
               alt="Post image"
               sx={{ 
                 width: '100%',
@@ -194,8 +213,7 @@ const PostView = ({ posts: propPosts }: PostViewProps) => {
                       <FavoriteIcon 
                         sx={{ 
                           color: '#ff1744',
-                          transform: animatingLike === post.id ? 'scale(1.2)' : 'scale(1)',
-                          transition: 'transform 0.3s ease-in-out',
+                          animation: animatingLike === post.id ? `${likeAnimation} 0.5s ease-in-out` : 'none',
                         }} 
                       />
                     ) : (
@@ -246,26 +264,53 @@ const PostView = ({ posts: propPosts }: PostViewProps) => {
             </CardContent>
 
             <CardContent sx={{ pt: 0, pb: 1 }}>
-              {post.comments.map((comment) => (
-                <Box key={comment.id} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <Avatar src={comment.user.image || ''} sx={{ width: 24, height: 24, mr: 1 }} />
-                  <Typography variant="body2" sx={{ flexGrow: 1 }}>
-                    <strong>{comment.user.name}: </strong>
-                    {comment.content}
-                  </Typography>
-                  {comment.userId === session?.user?.email && (
-                    <IconButton
-                      size="small"
-                      onClick={() => {
-                        setSelectedComment(comment.id);
-                        setDeleteDialogOpen(true);
-                      }}
+              {post.comments.length > 0 && (
+                <>
+                  {post.comments.slice(0, showAllComments[post.id] ? undefined : 2).map((comment) => (
+                    <Box key={comment.id} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                      <Avatar src={comment.user.image || ''} sx={{ width: 24, height: 24, mr: 1 }} />
+                      <Typography variant="body2" sx={{ flexGrow: 1 }}>
+                        <strong>{comment.user.name}: </strong>
+                        {comment.content}
+                      </Typography>
+                      {comment.user.email === session?.user?.email && (
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            setSelectedComment(comment.id);
+                            setDeleteDialogOpen(true);
+                          }}
+                          sx={{ 
+                            color: 'error.main',
+                            '&:hover': {
+                              backgroundColor: 'error.light',
+                            },
+                            padding: '4px',
+                            marginLeft: '8px',
+                            opacity: 1,
+                            visibility: 'visible'
+                          }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      )}
+                    </Box>
+                  ))}
+                  {post.comments.length > 2 && (
+                    <Typography
+                      variant="body2"
+                      color="primary"
+                      sx={{ cursor: 'pointer', mt: 1 }}
+                      onClick={() => setShowAllComments(prev => ({
+                        ...prev,
+                        [post.id]: !prev[post.id]
+                      }))}
                     >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
+                      {showAllComments[post.id] ? 'Show less' : `View all ${post.comments.length} comments`}
+                    </Typography>
                   )}
-                </Box>
-              ))}
+                </>
+              )}
             </CardContent>
 
             {/* Inline Comment Input */}
@@ -338,14 +383,50 @@ const PostView = ({ posts: propPosts }: PostViewProps) => {
       <Dialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: '12px',
+            padding: '16px'
+          }
+        }}
       >
-        <DialogTitle>Delete Comment</DialogTitle>
+        <DialogTitle sx={{ 
+          fontSize: '1.2rem',
+          fontWeight: 600,
+          pb: 1
+        }}>
+          Delete Comment
+        </DialogTitle>
         <DialogContent>
-          Are you sure you want to delete this comment?
+          <Typography>
+            Are you sure you want to delete this comment? This action cannot be undone.
+          </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDeleteComment} color="error">Delete</Button>
+        <DialogActions sx={{ 
+          pt: 2,
+          gap: 1
+        }}>
+          <Button 
+            onClick={() => setDeleteDialogOpen(false)}
+            variant="outlined"
+            sx={{ 
+              textTransform: 'none',
+              borderRadius: '20px'
+            }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleDeleteComment} 
+            color="error"
+            variant="contained"
+            sx={{ 
+              textTransform: 'none',
+              borderRadius: '20px'
+            }}
+          >
+            Delete
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

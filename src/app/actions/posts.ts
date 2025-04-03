@@ -25,7 +25,8 @@ export const fetchPosts = async (): Promise<(Post & { user: User })[]> => { // A
           include: {
             user: true
           }
-        }
+        },
+        images: true
       },
     });
 
