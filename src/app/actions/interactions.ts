@@ -102,40 +102,45 @@ export async function toggleBookmark(postId: string) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) return null;
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-  });
-  if (!user) return null;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+    if (!user) return null;
 
-  const existingBookmark = await prisma.bookmark.findUnique({
-    where: {
-      userId_postId: {
-        userId: user.id,
-        postId: postId,
-      },
-    },
-  });
-
-  if (existingBookmark) {
-    await prisma.bookmark.delete({
+    const existingBookmark = await prisma.bookmark.findUnique({
       where: {
         userId_postId: {
           userId: user.id,
-          postId: postId,
-        },
-      },
+          postId: postId
+        }
+      }
     });
-  } else {
-    await prisma.bookmark.create({
-      data: {
-        userId: user.id,
-        postId: postId,
-      },
-    });
-  }
 
-  revalidatePath('/prispevok');
-  return !existingBookmark;
+    if (existingBookmark) {
+      await prisma.bookmark.delete({
+        where: {
+          userId_postId: {
+            userId: user.id,
+            postId: postId
+          }
+        }
+      });
+    } else {
+      await prisma.bookmark.create({
+        data: {
+          userId: user.id,
+          postId: postId
+        }
+      });
+    }
+
+    revalidatePath('/prispevok');
+    return !existingBookmark;
+  } catch (error) {
+    console.error("Error toggling bookmark:", error);
+    return null;
+  }
 }
 
 // Fetch bookmarked posts
@@ -172,4 +177,40 @@ export async function fetchBookmarkedPosts() {
   });
 
   return bookmarkedPosts;
+}
+
+export async function fetchBookmarksForUser(userEmail: string) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.email) return [];
+
+  try {
+    // Get user ID from email
+    const user = await prisma.user.findUnique({
+      where: { email: userEmail }
+    });
+
+    if (!user) return [];
+
+    const bookmarks = await prisma.bookmark.findMany({
+      where: {
+        userId: user.id
+      },
+      include: {
+        post: {
+          include: {
+            images: true,
+            user: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    return bookmarks;
+  } catch (error) {
+    console.error("Error fetching bookmarks:", error);
+    return [];
+  }
 } 

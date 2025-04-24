@@ -1,19 +1,15 @@
 //src/app/pridat/page.tsx
 
-import Typography from "@mui/material/Typography";
-import Container  from "@mui/material/Container";
+import { Metadata } from "next";
+import CreatePostView from "@/sections/CreatePostView";
 
-export const metadata = {title:"Pridat| Petrik"};
+export const metadata: Metadata = {
+  title: "Pridať príspevok",
+  description: "Zdieľajte svoje najlepšie momenty s ostatnými",
+};
 
-export default function Pridat() {
-
-  return (
-
-    <Container>
-        <Typography> Pridat</Typography>
-    </Container>
-
-  );
+export default function CreatePostPage() {
+  return <CreatePostView />;
 }
 
 

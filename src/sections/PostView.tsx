@@ -32,6 +32,7 @@ import {
 import { fetchPosts } from "@/app/actions/posts";
 import { toggleLike, addComment, deleteComment, toggleBookmark } from "@/app/actions/interactions";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 interface ExtendedPost extends Post {
   user: User;
@@ -77,6 +78,7 @@ const bookmarkAnimation = keyframes`
 `;
 
 const PostView = ({ posts: propPosts }: PostViewProps) => {
+  const router = useRouter();
   const { data: session } = useSession();
   const [posts, setPosts] = useState<ExtendedPost[]>(propPosts || []);
   const [commentText, setCommentText] = useState("");
@@ -91,15 +93,15 @@ const PostView = ({ posts: propPosts }: PostViewProps) => {
 
   useEffect(() => {
     if (!propPosts) {
-      const loadPosts = async () => {
-        try {
+    const loadPosts = async () => {
+      try {
           const fetchedPosts = await fetchPosts() as ExtendedPost[];
-          setPosts(fetchedPosts);
-        } catch (error) {
-          console.error("Error fetching posts:", error);
-        }
-      };
-      loadPosts();
+        setPosts(fetchedPosts);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      }
+    };
+    loadPosts();
     }
   }, [propPosts]);
 
@@ -152,6 +154,10 @@ const PostView = ({ posts: propPosts }: PostViewProps) => {
     setPosts(fetchedPosts);
   };
 
+  const handleProfileClick = (userId: string) => {
+    router.push(`/profil/${userId}`);
+  };
+
   return (
     <Box sx={{ 
       display: 'flex', 
@@ -167,48 +173,64 @@ const PostView = ({ posts: propPosts }: PostViewProps) => {
         const isBookmarked = post.bookmarks.some(bookmark => bookmark.user.email === userEmail);
 
         return (
-          <Card key={post.id} sx={{ 
-            width: '100%',
-            boxShadow: 'none',
-            border: '1px solid #dbdbdb',
-            borderRadius: '8px',
-            mb: 2
-          }}>
-            <CardHeader
-              avatar={
-                <Avatar 
-                  src={post.user.image || ''} 
-                  alt={post.user.name || 'user'}
-                />
-              }
-              title={post.user.name}
-              sx={{ 
-                '.MuiCardHeader-title': { 
+        <Card key={post.id} sx={{ 
+          width: '100%',
+          boxShadow: 'none',
+          border: '1px solid #dbdbdb',
+          borderRadius: '8px',
+          mb: 2
+        }}>
+          <CardHeader
+            avatar={
+              <Avatar 
+                src={post.user.image || ''} 
+                alt={post.user.name || 'user'}
+                onClick={() => handleProfileClick(post.user.id)}
+                sx={{ cursor: 'pointer' }}
+              />
+            }
+            title={
+              <Typography
+                onClick={() => handleProfileClick(post.user.id)}
+                sx={{ 
                   fontWeight: 600,
-                  fontSize: '14px'
-                }
-              }}
-            />
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    textDecoration: 'underline'
+                  }
+                }}
+              >
+                {post.user.name}
+              </Typography>
+            }
+            sx={{ 
+              '.MuiCardHeader-title': { 
+                fontWeight: 600,
+                fontSize: '14px'
+              }
+            }}
+          />
 
-            <CardMedia
-              component="img"
+          <CardMedia
+            component="img"
               image={post.images[0]?.imageUrl || ''}
-              alt="Post image"
-              sx={{ 
-                width: '100%',
-                height: 'auto',
-                maxHeight: '470px',
-                objectFit: 'cover'
-              }}
-            />
+            alt="Post image"
+            sx={{ 
+              width: '100%',
+              height: 'auto',
+              maxHeight: '470px',
+              objectFit: 'cover'
+            }}
+          />
 
-            <CardActions disableSpacing sx={{ padding: '8px 16px' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <IconButton 
-                    onClick={() => handleLike(post.id)}
-                    sx={{ padding: '8px' }}
-                  >
+          <CardActions disableSpacing sx={{ padding: '8px 16px' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <IconButton 
+                  onClick={() => handleLike(post.id)}
+                  sx={{ padding: '8px' }}
+                >
                     {isLiked ? (
                       <FavoriteIcon 
                         sx={{ 
@@ -216,17 +238,17 @@ const PostView = ({ posts: propPosts }: PostViewProps) => {
                           animation: animatingLike === post.id ? `${likeAnimation} 0.5s ease-in-out` : 'none',
                         }} 
                       />
-                    ) : (
-                      <FavoriteBorderIcon />
-                    )}
-                  </IconButton>
+                  ) : (
+                    <FavoriteBorderIcon />
+                  )}
+                </IconButton>
                   <IconButton 
                     onClick={() => openCommentDialog(post.id)}
                     sx={{ padding: '8px' }}
                   >
-                    <CommentIcon />
-                  </IconButton>
-                </Box>
+                  <CommentIcon />
+                </IconButton>
+              </Box>
                 <IconButton 
                   onClick={() => handleBookmark(post.id)}
                   sx={{ padding: '8px' }}
@@ -242,9 +264,9 @@ const PostView = ({ posts: propPosts }: PostViewProps) => {
                   ) : (
                     <BookmarkBorderIcon />
                   )}
-                </IconButton>
-              </Box>
-            </CardActions>
+              </IconButton>
+            </Box>
+          </CardActions>
 
             <CardContent sx={{ pt: 0, pb: 1 }}>
               {post.likes.length > 0 && (
@@ -253,13 +275,13 @@ const PostView = ({ posts: propPosts }: PostViewProps) => {
                 </Typography>
               )}
               
-              {post.caption && (
+          {post.caption && (
                 <Typography variant="body2" color="text.primary" sx={{ mb: 1 }}>
-                  <Box component="span" sx={{ fontWeight: 600, marginRight: 1 }}>
-                    {post.user.name}
-                  </Box>
-                  {post.caption}
-                </Typography>
+                <Box component="span" sx={{ fontWeight: 600, marginRight: 1 }}>
+                  {post.user.name}
+                </Box>
+                {post.caption}
+              </Typography>
               )}
             </CardContent>
 
@@ -343,7 +365,7 @@ const PostView = ({ posts: propPosts }: PostViewProps) => {
                 </IconButton>
               </Box>
             </CardContent>
-          </Card>
+        </Card>
         );
       })}
 
